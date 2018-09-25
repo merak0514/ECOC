@@ -1,5 +1,7 @@
-test*.*
+test.py
 *.idea
 *.data
 __pycache__/
 venv/
+*.csv
+data/
