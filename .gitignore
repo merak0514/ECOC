@@ -1,3 +1,5 @@
 test*.*
-.idea
-.data
+*.idea
+*.data
+__pycache__/
+venv/
