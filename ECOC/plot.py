@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot(data, label1, label2):
+def plot(data, label1=0, label2=1):
     """
     输入数据以及要作为横纵坐标的两个标签
     :param data:
