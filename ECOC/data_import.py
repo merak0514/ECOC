@@ -34,8 +34,8 @@ def get_data(show=False):
         classes[int(datum[-1])].append(datum)
     class_names = list(classes.keys())
     if show is True:
-        print(origin_data)
-        print(class_names)
         print(feature_name_set)
+        print(class_names)
         print(classes)
+        print(origin_data)
     return [feature_name_set, class_names, classes, origin_data]
