@@ -6,7 +6,6 @@
 # @Software : PyCharm
 import random
 import numpy as np
-import time
 
 
 def choice_matrix(label, k):
@@ -66,7 +65,7 @@ def new_class(data, label, choice_matrix):
     return re_classified_data
 
 
-def classifier(data, label, k):
+def classifier(data, label, k, show=False):
     """
     :param data: 变为dict的数据，key为类名，value为此类包含的样本（list）
     :type data: dict
@@ -74,6 +73,8 @@ def classifier(data, label, k):
     :type label: list
     :param k: 需要重新生成的类数
     :type k: int
+    :param show:  是否展示
+    :type show: bool
     :return: re_classified_data: 重新分类后的数据，为长度为k的list，每一项是一个key为0/1的list
     :rtype: list
     :return: c: choice_matrix 选择矩阵
@@ -81,11 +82,9 @@ def classifier(data, label, k):
     """
     c = choice_matrix(label, k)
     re_classified_data = new_class(data, label, c)
+    if show is True:
+        for i in re_classified_data:
+            print(i)
+            input(1)
     return re_classified_data, c
-    # for i in re_classified_data:
-    #     print(i)
-    #     input(1)
-    # print(re_classified_data)
-
-
 
