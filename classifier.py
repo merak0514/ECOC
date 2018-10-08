@@ -8,15 +8,12 @@ import random
 import numpy as np
 
 
-def choice_matrix(label, k):
+def choice_matrix(label: list, k: int) -> list:
     """
     随机生成一个k*c阶每一行不相同的0/1矩阵，代表k种，其中每一种包含哪些类。
     :param label:
-    :type label: list
     :param k:
-    :type k: int
     :return: choice_matrix
-    :rtype: list
     """
     c = len(label)  # 总类数
     if k >= pow(2, c):
@@ -35,16 +32,12 @@ def choice_matrix(label, k):
     return choice_matrix
 
 
-def new_class(data, label, choice_matrix):
+def new_class(data: dict, label: list, choice_matrix: list) -> list:
     """
     :param data: 原始数据
-    :type data: dict
     :param label: 标记
-    :type: list
     :param choice_matrix: 上方函数生成的0/1矩阵
-    :type choice_matrix: list
     :return: re_classified_data
-    :rtype:list
     """
     c = len(label)  # 总类数
     choice_matrix = np.array(choice_matrix)
@@ -52,39 +45,34 @@ def new_class(data, label, choice_matrix):
     for choice in choice_matrix:
         new_data = {0: [], 1: []}
         for i in range(c):
-            l = label[i]
+            la = label[i]
             b = choice[i]
             if b == 1:
-                for datum in data[l]:
+                for datum in data[la]:
                     new_data[1].append(datum)
             elif b == 0:
-                for datum in data[l]:
+                for datum in data[la]:
                     new_data[0].append(datum)
         re_classified_data.append(new_data)
 
     return re_classified_data
 
 
-def classifier(data, label, k, show=False):
+def classifier(data: dict, label: list, k: int, show: bool = False) -> tuple[list, list]:
     """
     :param data: 变为dict的数据，key为类名，value为此类包含的样本（list）
-    :type data: dict
     :param label: 类的名字集合
-    :type label: list
     :param k: 需要重新生成的类数
-    :type k: int
     :param show:  是否展示
-    :type show: bool
-    :return: re_classified_data: 重新分类后的数据，为长度为k的list，每一项是一个key为0/1的list
-    :rtype: list
+    :return: re_classified_data: 重新分类后的数据，为长度为k的list，每一项是一个key为0/1的dict, \
+    其中0 和1 对应的值都是一个list，该list中的每一项为一条数据
     :return: c: choice_matrix 选择矩阵
-    :rtype: list
     """
     c = choice_matrix(label, k)
     re_classified_data = new_class(data, label, c)
     if show is True:
         for i in re_classified_data:
             print(i)
-            input(1)
+            input('任意键继续')
     return re_classified_data, c
 
