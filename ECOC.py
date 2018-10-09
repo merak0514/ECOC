@@ -9,6 +9,7 @@ import plot
 import classifier
 import trainer
 import pymongo
+import pymongo.errors
 
 
 class ECOC(object):
@@ -27,12 +28,12 @@ class ECOC(object):
         self.class_names = fixed_data[1]  # 所有的类名集合
         self.re_classified_data = []  # 所有的分类方案
         self.choice_matrix = []  # 选择矩阵
+        self.db_name = 'ECOC'
 
     def train_all(self, k: int):
         """
         :param k: 训练k个分类器
         :return:
-        :rtype:
         """
         self.re_classified_data, self.choice_matrix = classifier.classifier(self.sample_dict, self.class_names, k, False)
 
@@ -46,14 +47,19 @@ class ECOC(object):
 
     def mongo(self):
         my_client = pymongo.MongoClient('mongodb://localhost:27017/')
-        db = my_client['ECOC']
-        form1 = db['winequality-white']
+        form_name = 'winequality-white'
+        db = my_client[self.db_name]
+        form1 = db[form_name]
         for data_id in range(len(self.origin_data)):
             feature = self.feature_names
             feature.append('rank')
             temp_dict = dict(zip(feature, self.origin_data[data_id]))
             temp_dict['_id'] = data_id
-            form1.insert_one(temp_dict)
+            try:
+                form1.insert_one(temp_dict)
+            except pymongo.errors.DuplicateKeyError:
+                pass
+        print('upload to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
 
 
 if __name__ == '__main__':
