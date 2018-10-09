@@ -46,6 +46,9 @@ class ECOC(object):
         plot.plot(self.origin_data, label1, label2)
 
     def mongo(self):
+        """
+        上传到mongo数据库
+        """
         my_client = pymongo.MongoClient('mongodb://localhost:27017/')
         form_name = 'winequality-white'
         db = my_client[self.db_name]
@@ -59,7 +62,10 @@ class ECOC(object):
                 form1.insert_one(temp_dict)
             except pymongo.errors.DuplicateKeyError:
                 pass
-        print('upload to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
+            else:
+                print('Upload failed')
+                return 1
+        print('Uploaded to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
 
 
 if __name__ == '__main__':

@@ -8,15 +8,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot(data, label1=0, label2=1):
+def plot(data: list, label1: int = 0, label2: int = 1) -> None:
     """
     输入数据以及要作为横纵坐标的两个标签
-    :param data:
-    :type data: list
-    :param label1:
-    :type label1: int
-    :param label2:
-    :type label2: int
     """
     data = np.array(data)
     x1 = data[:, label1]  # 标记
