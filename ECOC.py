@@ -35,12 +35,14 @@ class ECOC(object):
         :param k: 训练k个分类器
         :return:
         """
-        self.re_classified_data, self.choice_matrix = classifier.classifier(self.sample_dict, self.class_names, k, False)
+        self.re_classified_data, self.choice_matrix = \
+            classifier.classifier(self.sample_dict, self.class_names, k, False)
 
         for cl in self.re_classified_data:
-            for i in cl.values():
-                print(len(i))
+            # for i in cl.values():
+            #     print(len(i))
             trainer.train(cl, self.data_size)
+            break
 
     def plot(self, label1, label2):
         plot.plot(self.origin_data, label1, label2)
@@ -65,6 +67,23 @@ class ECOC(object):
             else:
                 print('Upload failed')
                 return 1
+        print('Uploaded to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
+
+        form_name = 'choice_matrix'
+        form = db[form_name]
+        for choice_id in range(len(self.choice_matrix)):
+            choice = self.choice_matrix[choice_id]
+            temp_dict = {
+                '_id': choice_id,
+                'choice': ','.join([str(i) for i in choice])
+            }
+            try:
+                form.insert_one(temp_dict)
+            except pymongo.errors.DuplicateKeyError:
+                pass
+            # else:
+            #     print('Upload failed')
+            #     return 1
         print('Uploaded to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
 
 
