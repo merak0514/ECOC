@@ -47,7 +47,7 @@ class ECOC(object):
                     self.choice_matrix.append(choice)
                 print(self.choice_matrix)
                 self.re_classified_data = classifier.classifier(
-                    self.sample_dict, self.class_names, k, show=False, c_matrix=c_m)[0]
+                    self.sample_dict, self.class_names, k, show=False, c_matrix=self.choice_matrix)[0]
             else:
                 form.drop()
                 self.re_classified_data, self.choice_matrix = \

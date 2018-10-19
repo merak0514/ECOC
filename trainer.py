@@ -4,16 +4,15 @@
 # @Author   : Merak
 # @File     : trainer.py
 # @Software : PyCharm
-# Todo: 增加compute_node的验证（nodes_num < len(data)）
 import entropy
 import numpy as np
 
 
 def train(data: dict, data_size: int) -> None:
-    d = {0: [[1], [2]], 1: [[1], [2]]}
+    # d = {0: [[1], [2]], 1: [[1], [2]]}
     print(data_size)
     print(data)
-    origin_entropy = compute_entropy(data, data_size)  # 按照compute_entropy的要求多套一层
+    origin_entropy = compute_entropy(data, data_size)
     print(origin_entropy)
     compute_node(data, nodes_num=8)
     pass
@@ -75,24 +74,24 @@ def compute_node(info: dict, nodes_num: int=2)->tuple:
             list_a = sorted_data[:potential_node_index, -1]  # 分支a，所有值为类别
             list_b = sorted_data[potential_node_index:, -1]  # 分支b
             ent = len(list_a) / m * compute_ent(list(list_a)) + len(list_b) / m * compute_ent(list(list_b))
-            print('ent', sorted_data[potential_node_index, feature_id], ent)
+            # print('ent', sorted_data[potential_node_index, feature_id], ent)
             if ent < chose_node[1] or chose_node[1] == -1:
                 chose_node = (potential_node_index, ent)
         chose_node = (feature_id, sorted_data[chose_node[0], feature_id], chose_node[1])
-        print('chose_node', chose_node)
+        # print('chose_node', chose_node)
         if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
             chosen_node = chose_node
 
-    print(chosen_node)
+    print('chosen_node', chosen_node)
     return chosen_node
-
 
 
 if __name__ == '__main__':
     # train(1)
     a = {
         0: [[0, 1, 5], [8, 2, 5], [10, 3, 5], [9, 8, 5], [1, 8, 5]],
-        1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]]
+        1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]],
+        3: [[3, 2, 5], [8, 9, 5], [8, 105, 5]]
     }
     compute_node(a)
     pass
