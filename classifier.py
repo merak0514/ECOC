@@ -60,7 +60,7 @@ def new_class(data: dict, label: list, choice_matrix: list) -> list:
     return re_classified_data
 
 
-def classifier(data: dict, label: list, k: int, show: bool = False) -> tuple:
+def classifier(data: dict, label: list, k: int, show: bool = False, c_matrix=0) -> tuple:
     """
     :param data: 变为dict的数据，key为类名，value为此类包含的样本（list）
     :param label: 类的名字集合
@@ -68,13 +68,14 @@ def classifier(data: dict, label: list, k: int, show: bool = False) -> tuple:
     :param show:  是否展示
     :return: re_classified_data: 重新分类后的数据，为长度为k的list，每一项是一个key为0/1的dict, \
     其中0 和1 对应的值都是一个list，该list中的每一项为一条数据
-    :return: c: choice_matrix 选择矩阵
+    :return: c_matrix: choice_matrix 选择矩阵
     """
-    c = choice_matrix(label, k)
-    re_classified_data = new_class(data, label, c)
+    if not c_matrix:
+        c_matrix = choice_matrix(label, k)
+    re_classified_data = new_class(data, label, c_matrix)
     if show is True:
         for i in re_classified_data:
             print(i)
             input('任意键继续')
-    return re_classified_data, c
+    return re_classified_data, c_matrix
 
