@@ -11,7 +11,7 @@ def entropy(l: list) -> int:
     """
     计算熵
     :param l: 值为每一类的所有数据
-    :return: enr
+    :return: ent
     """
     m = sum(l)
     ent = sum(-i / m * math.log(i, 2) for i in l)
