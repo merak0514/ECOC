@@ -54,11 +54,13 @@ def new_class(data: dict, label: list, choice_matrix: list) -> list:
                 for datum in data[la]:
                     new_data[0].append(datum)
         re_classified_data.append(new_data)
+    # print(re_classified_data[0])
+    # input(1)
 
     return re_classified_data
 
 
-def classifier(data: dict, label: list, k: int, show: bool = False) -> tuple[list, list]:
+def classifier(data: dict, label: list, k: int, show: bool = False) -> tuple:
     """
     :param data: 变为dict的数据，key为类名，value为此类包含的样本（list）
     :param label: 类的名字集合

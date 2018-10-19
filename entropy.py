@@ -14,5 +14,5 @@ def entropy(l: list) -> int:
     :return: ent
     """
     m = sum(l)
-    ent = sum(-i / m * math.log(i, 2) for i in l)
+    ent = sum(i / m * math.log(i, 2) for i in l)
     return ent

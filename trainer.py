@@ -10,10 +10,12 @@ import numpy as np
 
 
 def train(data: dict, data_size: int) -> None:
-    # d = {'a': {0: [[1], [2]], 1: [[1], [2]]}, 'b': {0: [[1], [2]], 1: [[2]]}}
-    # print(data_size)
-    # origin_entropy = compute_entropy({0: data}, data_size)  # 按照compute_entropy的要求多套一层
-    # print(origin_entropy)
+    d = {0: [[1], [2]], 1: [[1], [2]]}
+    print(data_size)
+    print(data)
+    origin_entropy = compute_entropy(data, data_size)  # 按照compute_entropy的要求多套一层
+    print(origin_entropy)
+    compute_node(data, nodes_num=8)
     pass
 
 
@@ -24,11 +26,11 @@ def compute_entropy(data: dict, m: int) -> float:
     :param m: 此data中的所有样本数
     :return: ent
     """
-    keys = data.keys()
-    ent = 0
-    for k in keys:
-        cl_set = [len(data[k][0]), len(data[k][1])]
-        ent -= entropy.entropy(cl_set) * sum(cl_set) / m
+    # keys = data.keys()
+    # ent = 0
+    # for k in keys:
+    cl_set = [len(data[0]), len(data[1])]
+    ent = entropy.entropy(cl_set) * sum(cl_set) / m
     return ent
 
 
@@ -38,54 +40,59 @@ def compute_ent(l: list):
     return ent
 
 
-
-def compute_node(info: dict, nodes_num: int=2):
+def compute_node(info: dict, nodes_num: int=2)->tuple:
     """
+    返回选取的节点
+    chosen_node 格式为 (feature_id, 取值, 熵)
     :param info: 一阶dict，key为0/1
     :param nodes_num: 可能选取的节点比例
-    :return:
+    :return: chosen_node
     """
     data_set = []
     for i in info.values():
         data_set += i
     feature_num = len(data_set[0]) - 1  # 最后一项是最原始的分类
     m = len(data_set)  # 样本量
+    if m <= nodes_num:
+        nodes_num = input('invalid nodes_num; Please inout again: ')
     data_set = np.array(data_set)[:, :-1]  # 变为矩阵，裁剪最后附带的原始分类
-    # print('data_set', data_set)
     signs = []
     for sign in info.keys():
         signs += [sign] * len(info[sign])
     data_set = np.c_[data_set, signs]  # 附加标记（0/1），在最后一列
-    print('data_set', data_set)
     break_length = m / (nodes_num + 1)  # 每隔这么长取一个点；此处m不知道是否应该使用 m+1 或者 m-1 代
     potential_nodes_index = [round(break_length * (i + 1)) for i in range(nodes_num)]  # 这个feature上所有可能的node_index
-    print('potential_nodes_index', potential_nodes_index)
+    # print('potential_nodes_index', potential_nodes_index)
+
+    chosen_node = (-1, -1, -1)  # init
     for feature_id in range(feature_num):
         sorted_data = np.array(sorted(data_set, key=lambda s: s[feature_id]))
-        value_set = data_set[:, feature_id]
-        value_set.sort()  # 排序
-        print('sorted_data', sorted_data)
-        for potential_node_index in potential_nodes_index:
-            list_a = sorted_data[:potential_node_index, -1]  # 分支a
+        # print('sorted_data', sorted_data)
+        # potential_nodes = [sorted_data[i, feature_id] for i in potential_nodes_index]  # 根据先前计算出的index找值
+        # print('potential_nodes', potential_nodes)
+        chose_node = (-1, -1)  # init
+        for potential_node_index in potential_nodes_index:  # 对于一个feature上每一个可能产生节点的点计算熵
+            list_a = sorted_data[:potential_node_index, -1]  # 分支a，所有值为类别
             list_b = sorted_data[potential_node_index:, -1]  # 分支b
-            print(list_b)
             ent = len(list_a) / m * compute_ent(list(list_a)) + len(list_b) / m * compute_ent(list(list_b))
-            print('ent', potential_node_index, ent)
+            print('ent', sorted_data[potential_node_index, feature_id], ent)
+            if ent < chose_node[1] or chose_node[1] == -1:
+                chose_node = (potential_node_index, ent)
+        chose_node = (feature_id, sorted_data[chose_node[0], feature_id], chose_node[1])
+        print('chose_node', chose_node)
+        if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
+            chosen_node = chose_node
 
-        print('value_set', value_set)
-        potential_nodes = [value_set[i] for i in potential_nodes_index]  # 根据先前计算出的index找值
-        print('potential_nodes', potential_nodes)
-
-
-        break
+    print(chosen_node)
+    return chosen_node
 
 
 
 if __name__ == '__main__':
     # train(1)
     a = {
-        0: [[0, 1], [8, 2], [10, 3], [9, 8], [1, 8], [2, 15]],
-        1: [[2, 6], [9, 10], [351, 20]]
+        0: [[0, 1, 5], [8, 2, 5], [10, 3, 5], [9, 8, 5], [1, 8, 5]],
+        1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]]
     }
     compute_node(a)
     pass
