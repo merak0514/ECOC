@@ -6,6 +6,7 @@
 # @Software : PyCharm
 import entropy
 import numpy as np
+from collections import defaultdict
 
 
 def train(data: dict, data_size: int) -> None:
@@ -15,6 +16,18 @@ def train(data: dict, data_size: int) -> None:
     origin_entropy = compute_entropy(data, data_size)
     print(origin_entropy)
     compute_node(data, nodes_num=8)
+    pass
+
+
+def tree_generate(data: dict, feature_usage: dict=None, max_usage: int=2, node=None):
+    """
+    :param data:
+    :param feature_usage:
+    :param node:
+    :return:
+    """
+    if not feature_usage:  # 第一次初始化feature使用情况
+        feature_usage = defaultdict(lambda: 0)
     pass
 
 
