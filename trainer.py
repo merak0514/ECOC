@@ -72,18 +72,13 @@ def compute_node(info: dict, disabled_features: list=[], nodes_num: int=2)->tupl
     :param nodes_num: 可能选取的节点比例
     :return: chosen_node
     """
-    data_set = []
-    for i in info.values():
-        data_set += i
-    feature_num = len(data_set[0]) - 1  # 最后一项是最原始的分类
-    m = len(data_set)  # 样本量
+    feature_num = len(info[0]) - 2
+    m = len(info)
     if m <= nodes_num:
         nodes_num = input('invalid nodes_num; Please inout again: ')
-    data_set = np.array(data_set)[:, :-1]  # 变为矩阵，裁剪最后附带的原始分类
-    signs = []
-    for sign in info.keys():
-        signs += [sign] * len(info[sign])
-    data_set = np.c_[data_set, signs]  # 附加标记（0/1），在最后一列
+    data_set = np.array(info)
+    print((data_set[0]))
+
     break_length = m / (nodes_num + 1)  # 每隔这么长取一个点；此处m不知道是否应该使用 m+1 或者 m-1 代
     potential_nodes_index = [round(break_length * (i + 1)) for i in range(nodes_num)]  # 这个feature上所有可能的node_index
     # print('potential_nodes_index', potential_nodes_index)

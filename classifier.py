@@ -41,17 +41,14 @@ def new_class(data: dict, label: list, c_matrix: list) -> list:
     c = len(label)  # 总类数
     c_matrix = np.array(c_matrix)
     re_classified_data = []
+
     for choice in c_matrix:
-        new_data = {0: [], 1: []}
+        new_data = []
         for i in range(c):
             la = label[i]
             b = choice[i]
-            if b == 1:
-                for datum in data[la]:
-                    new_data[1].append(datum)
-            elif b == 0:
-                for datum in data[la]:
-                    new_data[0].append(datum)
+            for datum in data[la]:
+                new_data.append(datum + [b])
         re_classified_data.append(new_data)
     # print(re_classified_data[0])
     # input(1)
