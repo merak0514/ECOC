@@ -10,20 +10,22 @@ from collections import defaultdict
 import binary_tree
 
 
-def train(data: dict, data_size: int) -> None:
+def train(data: list, data_size: int) -> None:
     # d = {0: [[1], [2]], 1: [[1], [2]]}
     print(data_size)
     print(data)
     origin_entropy = compute_entropy(data, data_size)
     print(origin_entropy)
-    compute_node(data, nodes_num=8)
+    tree_generate(data, max_usage=2)
+    # compute_node(data, nodes_num=8)
     pass
 
 
-def tree_generate(data: dict, feature_usage: dict=None, max_usage: int=2, node=None):
+def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=None):
     """
     :param data:
     :param feature_usage:
+    :param max_usage:
     :param node:
     :return:
     """
@@ -37,9 +39,21 @@ def tree_generate(data: dict, feature_usage: dict=None, max_usage: int=2, node=N
 
     bt = binary_tree.BinaryTree(data)
     break_info = compute_node(data, disabled_features, nodes_num=7)
-    feature_usage[break_info[0]] += 1
+    chosen_feature = break_info[0]
+    break_num = break_info[1]
+    feature_usage[chosen_feature] += 1
 
-    pass
+    # sorted_data = sorted(data, key=lambda s: s[chosen_feature])
+    data_left = []
+    data_right = []
+    for datum in data:
+        if datum[chosen_feature] < break_num:
+            data_left.append(datum)
+        else:
+            data_right.append(datum)
+
+    tree_generate(data_left, feature_usage, max_usage)
+    tree_generate(data_right, feature_usage, max_usage)
 
 
 def compute_entropy(data: dict, m: int) -> float:
@@ -63,12 +77,12 @@ def compute_ent(l: list):
     return ent
 
 
-def compute_node(info: dict, disabled_features: list=[], nodes_num: int=2)->tuple:
+def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tuple:
     """
     返回选取的节点
     chosen_node 格式为 (feature_id, 取值, 熵)
     :param info: 一阶dict，key为0/1
-    :param disabled_feature: 未启用的feature
+    :param disabled_features: 未启用的 features
     :param nodes_num: 可能选取的节点比例
     :return: chosen_node
     """
@@ -77,7 +91,6 @@ def compute_node(info: dict, disabled_features: list=[], nodes_num: int=2)->tupl
     if m <= nodes_num:
         nodes_num = input('invalid nodes_num; Please inout again: ')
     data_set = np.array(info)
-    print((data_set[0]))
 
     break_length = m / (nodes_num + 1)  # 每隔这么长取一个点；此处m不知道是否应该使用 m+1 或者 m-1 代
     potential_nodes_index = [round(break_length * (i + 1)) for i in range(nodes_num)]  # 这个feature上所有可能的node_index
