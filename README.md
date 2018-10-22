@@ -43,5 +43,11 @@
 #### 选择最优划分属性
 此样本中所有feature均为连续量。均匀选取1/10样本作为可能划分点，所有feature在使用【两次】之后被禁止使用。
 * 左闭右开
-* 计算熵：`trainer.compute_entropy(data: dict, m: int)` ，返回按照此分类方式产生的熵
+* 计算熵：
+    * `trainer.compute_entropy(data: dict, m: int)`
+    * 返回按照此分类方式产生的熵
+* 计算节点：
+    * `compute_node(info: dict, disabled_feature: list=[], nodes_num: int=2)->tuple`
+    * `info` 为dict，key为所分的类（后来分的类）；`disabled_feature` 为 list，代表不激活的 feature；`nodes_num` 为可能可以供选择的节点数量。
+    * 返回节点信息 `tuple(采用的feature，节点位置，熵)`
 ### 5. 对于每一个新类，进行训练分类

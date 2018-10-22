@@ -8,7 +8,7 @@ import random
 import numpy as np
 
 
-def choice_matrix(label: list, k: int) -> list:
+def choice_matrix(label: list, k: int):
     """
     随机生成一个k*c阶每一行不相同的0/1矩阵，代表k种，其中每一种包含哪些类。
     :param label:
@@ -21,28 +21,27 @@ def choice_matrix(label: list, k: int) -> list:
         exit(1)
     choices_set = range(1, pow(2, c-1))
     choices = random.sample(choices_set, k)  # 随机挑选k个数字
-    choice_matrix = np.zeros((k, c))  # |新生成类|*|原始类|阶0/1矩阵
+    c_matrix = np.zeros((k, c))  # |新生成类|*|原始类|阶0/1矩阵
     for i in range(len(choices)):
         choice = choices[i]
         binary = bin(choice)[2:]
-        choice_matrix[i][:c-len(binary)] = 0  # 在二进制一开始部分补零
+        c_matrix[i][:c-len(binary)] = 0  # 在二进制一开始部分补零
         for j in range(len(binary)):
-            choice_matrix[i][c-len(binary)+j] = binary[j]
-    print(choice_matrix)
-    return choice_matrix
+            c_matrix[i][c-len(binary)+j] = binary[j]
+    return c_matrix
 
 
-def new_class(data: dict, label: list, choice_matrix: list) -> list:
+def new_class(data: dict, label: list, c_matrix: list) -> list:
     """
     :param data: 原始数据
     :param label: 标记
-    :param choice_matrix: 上方函数生成的0/1矩阵
+    :param c_matrix: 上方函数生成的0/1矩阵
     :return: re_classified_data
     """
     c = len(label)  # 总类数
-    choice_matrix = np.array(choice_matrix)
+    c_matrix = np.array(c_matrix)
     re_classified_data = []
-    for choice in choice_matrix:
+    for choice in c_matrix:
         new_data = {0: [], 1: []}
         for i in range(c):
             la = label[i]
@@ -72,7 +71,7 @@ def classifier(data: dict, label: list, k: int, show: bool = False, c_matrix=0) 
     """
     if not c_matrix:
         c_matrix = choice_matrix(label, k)
-    re_classified_data = new_class(data, label, c_matrix)
+    re_classified_data = new_class(data, label, list(c_matrix))
     if show is True:
         for i in re_classified_data:
             print(i)

@@ -7,6 +7,7 @@
 import entropy
 import numpy as np
 from collections import defaultdict
+import binary_tree
 
 
 def train(data: dict, data_size: int) -> None:
@@ -26,8 +27,18 @@ def tree_generate(data: dict, feature_usage: dict=None, max_usage: int=2, node=N
     :param node:
     :return:
     """
+    disabled_features = []
     if not feature_usage:  # 第一次初始化feature使用情况
         feature_usage = defaultdict(lambda: 0)
+    else:  # 构造 disabled list
+        for i, j in feature_usage.items():
+            if j >= max_usage:
+                disabled_features.append(i)
+
+    bt = binary_tree.BinaryTree(data)
+    break_info = compute_node(data, disabled_features, nodes_num=7)
+    feature_usage[break_info[0]] += 1
+
     pass
 
 
@@ -52,11 +63,12 @@ def compute_ent(l: list):
     return ent
 
 
-def compute_node(info: dict, nodes_num: int=2)->tuple:
+def compute_node(info: dict, disabled_features: list=[], nodes_num: int=2)->tuple:
     """
     返回选取的节点
     chosen_node 格式为 (feature_id, 取值, 熵)
     :param info: 一阶dict，key为0/1
+    :param disabled_feature: 未启用的feature
     :param nodes_num: 可能选取的节点比例
     :return: chosen_node
     """
@@ -78,6 +90,8 @@ def compute_node(info: dict, nodes_num: int=2)->tuple:
 
     chosen_node = (-1, -1, -1)  # init
     for feature_id in range(feature_num):
+        if feature_id in disabled_features:
+            continue
         sorted_data = np.array(sorted(data_set, key=lambda s: s[feature_id]))
         # print('sorted_data', sorted_data)
         # potential_nodes = [sorted_data[i, feature_id] for i in potential_nodes_index]  # 根据先前计算出的index找值

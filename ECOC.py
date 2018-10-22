@@ -20,7 +20,7 @@ class ECOC(object):
     sample_dict: dict
 
     def __init__(self):
-        fixed_data = data_import.get_data(show=True)
+        fixed_data = data_import.get_data(show=False)
         self.sample_dict = fixed_data[2]  # 以类名为key的dict
         self.origin_data = fixed_data[3]  # 原始数据，为二维list
         self.data_size = len(self.origin_data)  # 数据量
@@ -45,7 +45,6 @@ class ECOC(object):
                 for i in c_m:
                     choice = [float(m) for m in i['choice'].split(',')]
                     self.choice_matrix.append(choice)
-                print(self.choice_matrix)
                 self.re_classified_data = classifier.classifier(
                     self.sample_dict, self.class_names, k, show=False, c_matrix=self.choice_matrix)[0]
             else:
@@ -55,6 +54,7 @@ class ECOC(object):
         else:
             self.re_classified_data, self.choice_matrix = \
                 classifier.classifier(self.sample_dict, self.class_names, k, False)
+        print(self.choice_matrix)
         self.mongo()
 
         for cl in self.re_classified_data:
@@ -111,5 +111,5 @@ class ECOC(object):
 if __name__ == '__main__':
 
     e = ECOC()
-    e.train_all(7)
+    e.train_all(12)
     # e.mongo()
