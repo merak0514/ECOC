@@ -14,8 +14,10 @@ def train(data: list, data_size: int) -> None:
     # d = {0: [[1], [2]], 1: [[1], [2]]}
     print(data_size)
     print(data)
-    origin_entropy = compute_entropy(data, data_size)
-    print(origin_entropy)
+    l = np.array(data)[:, -1]
+    origin_entropy = compute_ent(list(l))
+    # origin_entropy = compute_entropy(data, data_size)
+    print('origin_entropy: ', origin_entropy)
     tree_generate(data, max_usage=2)
     # compute_node(data, nodes_num=8)
     pass
@@ -52,8 +54,9 @@ def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=N
         else:
             data_right.append(datum)
 
-    tree_generate(data_left, feature_usage, max_usage)
     tree_generate(data_right, feature_usage, max_usage)
+    # tree_generate(data_left, feature_usage, max_usage)
+
 
 
 def compute_entropy(data: dict, m: int) -> float:
@@ -89,36 +92,55 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
     feature_num = len(info[0]) - 2
     m = len(info)
     if m <= nodes_num:
-        nodes_num = input('invalid nodes_num; Please inout again: ')
+        nodes_num = input('invalid nodes_num; Please input again: ')
     data_set = np.array(info)
+    print('ent before chosen: ', compute_ent(list(data_set[:, -1])))
+    print('ds', data_set[:, -1])
+    print('dsl', len(data_set[:, -1]))
 
     break_length = m / (nodes_num + 1)  # 每隔这么长取一个点；此处m不知道是否应该使用 m+1 或者 m-1 代
     potential_nodes_index = [round(break_length * (i + 1)) for i in range(nodes_num)]  # 这个feature上所有可能的node_index
     # print('potential_nodes_index', potential_nodes_index)
 
     chosen_node = (-1, -1, -1)  # init
+    chosen_b = []
     for feature_id in range(feature_num):
         if feature_id in disabled_features:
             continue
         sorted_data = np.array(sorted(data_set, key=lambda s: s[feature_id]))
         # print('sorted_data', sorted_data)
-        # potential_nodes = [sorted_data[i, feature_id] for i in potential_nodes_index]  # 根据先前计算出的index找值
+        potential_nodes = [sorted_data[i, feature_id] for i in potential_nodes_index]  # 根据先前计算出的index找值
         # print('potential_nodes', potential_nodes)
         chose_node = (-1, -1)  # init
-        for potential_node_index in potential_nodes_index:  # 对于一个feature上每一个可能产生节点的点计算熵
-            list_a = sorted_data[:potential_node_index, -1]  # 分支a，所有值为类别
-            list_b = sorted_data[potential_node_index:, -1]  # 分支b
-            ent = len(list_a) / m * compute_ent(list(list_a)) + len(list_b) / m * compute_ent(list(list_b))
+        for potential_node in potential_nodes:  # 对于一个feature上每一个可能产生节点的点计算熵
+            list_a = list(i[-1] for i in data_set if i[feature_id] < potential_node)
+            list_b = list(i[-1] for i in data_set if i[feature_id] >= potential_node)
+            # list_a = list(sorted_data[:potential_node_index, -1])  # 分支a，所有值为类别
+            # list_b = list(sorted_data[potential_node_index:, -1])  # 分支b
+            ent = len(list_a) / m * compute_ent(list_a) + len(list_b) / m * compute_ent(list_b)
             # print('ent', sorted_data[potential_node_index, feature_id], ent)
             if ent < chose_node[1] or chose_node[1] == -1:
-                chose_node = (potential_node_index, ent)
-        chose_node = (feature_id, sorted_data[chose_node[0], feature_id], chose_node[1])
+                chose_node = (potential_node, ent)
+                chose_a = list_a
+                chose_b = list_b
+        chose_node = (feature_id, chose_node[0], chose_node[1])
         # print('chose_node', chose_node)
         if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
             chosen_node = chose_node
-
+            chosen_b = chose_b
+            chosen_a = chose_a
+    # print('a', compute_ent(list_a))
+    print('b', compute_ent(chosen_b))
+    print('rent', len(chosen_a) / m * compute_ent(chosen_a) + len(chosen_b) / m * compute_ent(chosen_b))
+    if compute_ent(chosen_b) < 3:
+        print('b', chosen_b)
+        print('bl', len(chosen_b))
+        print('a', chosen_a)
+        # print('data', sorted_data)
     print('chosen_node', chosen_node)
     return chosen_node
+
+
 
 
 if __name__ == '__main__':
