@@ -16,7 +16,6 @@ def train(data: list, data_size: int) -> None:
     print(data)
     l = np.array(data)[:, -1]
     origin_entropy = compute_ent(list(l))
-    # origin_entropy = compute_entropy(data, data_size)
     print('origin_entropy: ', origin_entropy)
     tree_generate(data, max_usage=2)
     # compute_node(data, nodes_num=8)
@@ -39,7 +38,13 @@ def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=N
             if j >= max_usage:
                 disabled_features.append(i)
 
-    bt = binary_tree.BinaryTree(data)
+    chosen_class, accuracy = compute_accuracy(data)
+    node_info = {
+        'data': data,
+        'class': chosen_class,
+        'accuracy': accuracy,
+    }
+    bt = binary_tree.BinaryTree(node_info)
     break_info = compute_node(data, disabled_features, nodes_num=7)
     chosen_feature = break_info[0]
     break_num = break_info[1]
@@ -54,24 +59,22 @@ def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=N
         else:
             data_right.append(datum)
 
-    tree_generate(data_right, feature_usage, max_usage)
-    tree_generate(data_left, feature_usage, max_usage)
+    left_chosen_class, left_accuracy = compute_accuracy(data_left)
+    right_chosen_class, right_accuracy = compute_accuracy(data_right)
+    mixed_accuracy = (len(data_left) * left_accuracy + len(data_right) * right_accuracy) / \
+                     (len(data_right) + len(data_left))
 
-
-
-def compute_entropy(data: dict, m: int) -> float:
-    """
-    计算按照目前分类的熵
-    :param data: 二维dict，第一维为此处分类，第二维为0/1
-    :param m: 此data中的所有样本数
-    :return: ent
-    """
-    # keys = data.keys()
-    # ent = 0
-    # for k in keys:
-    cl_set = [len(data[0]), len(data[1])]
-    ent = entropy.entropy(cl_set) * sum(cl_set) / m
-    return ent
+    print('mixed_accuracy', mixed_accuracy)
+    print('accuracy', accuracy)
+    if mixed_accuracy > accuracy or len(data) < 100 * max_usage:  # 预剪枝
+        print('剪枝')
+        bt.insert_right(tree_generate(data_right, feature_usage, max_usage))
+        bt.insert_left(tree_generate(data_left, feature_usage, max_usage))
+        return bt
+    else:
+        bt.set_leaf()  # 标记为叶节点
+        print('标记为叶节点')
+        return bt
 
 
 def compute_ent(l: list):
@@ -125,12 +128,27 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
     return chosen_node
 
 
+def compute_accuracy(data: list)->tuple:
+    """
+    返回所标记的类别和精确率
+    """
+    # data = np.array(data)
+    label = [i[-1] for i in data]
+    # print([str(i) for i in set(label)])
+    label_dict = {i: label.count(i) for i in set(label)}
+    max_class = max(label_dict, key=label_dict.get)
+    accuracy = label_dict[max_class] / len(label)
+    return max_class, accuracy
+
+
 if __name__ == '__main__':
     # train(1)
-    a = {
-        0: [[0, 1, 5], [8, 2, 5], [10, 3, 5], [9, 8, 5], [1, 8, 5]],
-        1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]],
-        3: [[3, 2, 5], [8, 9, 5], [8, 105, 5]]
-    }
-    compute_node(a)
+    # a = {
+    #     0: [[0, 1, 5], [8, 2, 5], [10, 3, 5], [9, 8, 5], [1, 8, 5]],
+    #     1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]],
+    #     3: [[3, 2, 5], [8, 9, 5], [8, 105, 5]]
+    # }
+    # compute_node(a)
+    a = [[1], [1], [1], [2], [2]]
+    print(compute_accuracy(a))
     pass

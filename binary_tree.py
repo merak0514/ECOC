@@ -13,6 +13,7 @@ class BinaryTree(Generic[T]):
         self.key = root_obj
         self.left_child = None
         self.right_child = None
+        self.is_leaf = False  # 若是是叶节点，则变为True; 叶节点没有分支
 
     def insert_left(self, new_node):
         if self.left_child is None:
@@ -43,6 +44,9 @@ class BinaryTree(Generic[T]):
 
     def get_left_child(self):
         return self.left_child
+
+    def set_leaf(self, is_leaf=True):
+        self.is_leaf = is_leaf
 
     def show_right_tree(self):
         print(self.key)
