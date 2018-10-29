@@ -15,6 +15,12 @@ class BinaryTree(Generic[T]):
         self.right_child = None
         self.is_leaf = False  # 若是是叶节点，则变为True; 叶节点没有分支
 
+    def set_left(self, obj):
+        self.left_child = obj
+
+    def set_right(self, obj):
+        self.right_child = obj
+
     def insert_left(self, new_node):
         if self.left_child is None:
             self.left_child = BinaryTree(new_node)

@@ -15,23 +15,29 @@ def train(data_tuple: tuple, data_size: int) -> None:
     test_data = data_tuple[1]
     validation_data = data_tuple[2]
     print(data_size)
-    print(train_data)
+    # print(train_data)
     l = np.array(train_data)[:, -1]
     origin_entropy = compute_ent(list(l))
     print('origin_entropy: ', origin_entropy)
-    tree_generate(train_data, max_usage=2)
+    bt = tree_generate(train_data, test_data, max_usage=2, node_num=7)
+    max({})
     # compute_node(train_data, nodes_num=8)
     pass
 
 
-def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=None):
+def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, max_usage: int=2, node_num=7, rng=False):
     """
-    :param data:
-    :param feature_usage:
-    :param max_usage:
+    :param train_data: 训练集
+    :param test_data: 测试集
+    :param feature_usage: 所有的feature的使用情况
+    :param max_usage: 每个feature可以使用的最大次数
+    :param node_num: 最大可供选择的节点数，默认为7
     :param node:
     :return:
     """
+    if rng is True:
+        print('in left')
+
     disabled_features = []
     if not feature_usage:  # 第一次初始化feature使用情况
         feature_usage = defaultdict(lambda: 0)
@@ -39,43 +45,79 @@ def tree_generate(data: list, feature_usage: dict=None, max_usage: int=2, node=N
         for i, j in feature_usage.items():
             if j >= max_usage:
                 disabled_features.append(i)
+    test_chosen_class, test_accuracy = compute_accuracy(test_data)
+    print('accuracy', test_accuracy)
 
-    chosen_class, accuracy = compute_accuracy(data)
+    # 该节点信息
+    print('length', len(train_data))
+    chosen_class, accuracy = compute_accuracy(train_data)
     node_info = {
-        'data': data,
+        'train_data': train_data,
         'class': chosen_class,
-        'accuracy': accuracy,
+        'train_accuracy': accuracy,
+        'test_accuracy': test_accuracy,
     }
     bt = binary_tree.BinaryTree(node_info)
-    break_info = compute_node(data, disabled_features, nodes_num=7)
+
+    if len(train_data) <= node_num or accuracy == 1 or test_accuracy == 1:  # 数据量小于要产生可能分叉点的量，返回
+        bt.set_leaf()  # 标记为叶节点
+        bt.set_right(0)
+        print('无法继续分支，标记为叶节点')
+        return bt
+
+    break_info = compute_node(train_data, disabled_features, nodes_num=7)
+
     chosen_feature = break_info[0]
     break_num = break_info[1]
     feature_usage[chosen_feature] += 1
 
-    # sorted_data = sorted(data, key=lambda s: s[chosen_feature])
-    data_left = []
-    data_right = []
-    for datum in data:
+    # sorted_data = sorted(train_data, key=lambda s: s[chosen_feature])
+    train_data_left = []
+    train_data_right = []
+    for datum in train_data:
         if datum[chosen_feature] < break_num:
-            data_left.append(datum)
+            train_data_left.append(datum)
         else:
-            data_right.append(datum)
+            train_data_right.append(datum)
+            
+    test_data_left = []
+    test_data_right = []
+    for datum in test_data:
+        if datum[chosen_feature] < break_num:
+            test_data_left.append(datum)
+        else:
+            test_data_right.append(datum)
 
-    left_chosen_class, left_accuracy = compute_accuracy(data_left)
-    right_chosen_class, right_accuracy = compute_accuracy(data_right)
-    mixed_accuracy = (len(data_left) * left_accuracy + len(data_right) * right_accuracy) / \
-                     (len(data_right) + len(data_left))
+    print(len(test_data_left))
+    if not test_data_left or not test_data_right:
+        bt.set_leaf()  # 标记为叶节点
+        bt.set_right(1)
+        print('测试集为空，标记为叶节点')
+        return bt
+
+    train_left_chosen_class, train_left_accuracy = compute_accuracy(train_data_left)
+    train_right_chosen_class, train_right_accuracy = compute_accuracy(train_data_right)
+
+    test_left_chosen_class, test_left_accuracy = compute_accuracy(test_data_left, max_class=train_left_chosen_class)
+    test_right_chosen_class, test_right_accuracy = compute_accuracy(test_data_right, max_class=train_right_chosen_class)
+    
+    mixed_accuracy = (len(test_data_left) * test_left_accuracy + len(test_data_right) * test_right_accuracy) / \
+                     (len(test_data_right) + len(test_data_left))
 
     print('mixed_accuracy', mixed_accuracy)
-    print('accuracy', accuracy)
-    if mixed_accuracy > accuracy or len(data) < 100 * max_usage:  # 预剪枝
+
+    if mixed_accuracy > test_accuracy or len(train_data) > 50 * max_usage:  # 预剪枝
         print('剪枝')
-        bt.insert_right(tree_generate(data_right, feature_usage, max_usage))
-        bt.insert_left(tree_generate(data_left, feature_usage, max_usage))
+        bt.set_right(tree_generate(train_data_right, test_data_right, feature_usage, max_usage))
+
+        print('right done')
+        bt.set_left(tree_generate(train_data_left, test_data_left, feature_usage, max_usage, rng=True))
+        print('left done')
         return bt
     else:
         bt.set_leaf()  # 标记为叶节点
-        print('标记为叶节点')
+        bt.set_right(2)
+        print('不能减少准确度，标记为叶节点')
         return bt
 
 
@@ -89,7 +131,7 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
     """
     返回选取的节点
     chosen_node 格式为 (feature_id, 取值, 熵)
-    :param info: 一阶dict，key为0/1
+    :param info: list
     :param disabled_features: 未启用的 features
     :param nodes_num: 可能选取的节点比例
     :return: chosen_node
@@ -123,14 +165,16 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
             if ent < chose_node[1] or chose_node[1] == -1:
                 chose_node = (potential_node, ent)
         chose_node = (feature_id, chose_node[0], chose_node[1])
-        # print('chose_node', chose_node)
+        print('chose_node', chose_node)
         if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
             chosen_node = chose_node
     print('chosen_node', chosen_node)
+    if chosen_node == (-1, -1, -1):
+        max({})
     return chosen_node
 
 
-def compute_accuracy(data: list)->tuple:
+def compute_accuracy(data: list, max_class=None)->tuple:
     """
     返回所标记的类别和精确率
     """
@@ -138,8 +182,17 @@ def compute_accuracy(data: list)->tuple:
     label = [i[-1] for i in data]
     # print([str(i) for i in set(label)])
     label_dict = {i: label.count(i) for i in set(label)}
-    max_class = max(label_dict, key=label_dict.get)
-    accuracy = label_dict[max_class] / len(label)
+    if max_class is None:
+        try:
+            max_class = max(label_dict, key=label_dict.get)
+        except ValueError:
+            print(label_dict)
+            print(label)
+            input(1)
+    try:
+        accuracy = label_dict[max_class] / len(label)
+    except KeyError:
+        accuracy = 0
     return max_class, accuracy
 
 
@@ -151,7 +204,6 @@ def hold_out(data: list, show=False) -> tuple:
     data = np.array(data)
     label = list(data[:, -1])
     label_dict = {i: label.count(i) for i in set(label)}
-    print(label_dict)
     used_label = {i: 0 for i in set(label)}
     np.random.shuffle(data)
     for i in data:
