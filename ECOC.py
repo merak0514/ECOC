@@ -57,10 +57,13 @@ class ECOC(object):
         print(self.choice_matrix)
         self.mongo()
 
+        # 开始训练
         for cl in self.re_classified_data:
+            data_tuple = trainer.hold_out(cl)
+
             # for i in cl.values():
             #     print(len(i))
-            trainer.train(cl, self.data_size)
+            trainer.train(data_tuple, self.data_size)
             break
 
     def plot(self, label1, label2):

@@ -10,15 +10,17 @@ from collections import defaultdict
 import binary_tree
 
 
-def train(data: list, data_size: int) -> None:
-    # d = {0: [[1], [2]], 1: [[1], [2]]}
+def train(data_tuple: tuple, data_size: int) -> None:
+    train_data = data_tuple[0]
+    test_data = data_tuple[1]
+    validation_data = data_tuple[2]
     print(data_size)
-    print(data)
-    l = np.array(data)[:, -1]
+    print(train_data)
+    l = np.array(train_data)[:, -1]
     origin_entropy = compute_ent(list(l))
     print('origin_entropy: ', origin_entropy)
-    tree_generate(data, max_usage=2)
-    # compute_node(data, nodes_num=8)
+    tree_generate(train_data, max_usage=2)
+    # compute_node(train_data, nodes_num=8)
     pass
 
 
@@ -139,6 +141,34 @@ def compute_accuracy(data: list)->tuple:
     max_class = max(label_dict, key=label_dict.get)
     accuracy = label_dict[max_class] / len(label)
     return max_class, accuracy
+
+
+def hold_out(data: list, show=False) -> tuple:
+    train_data = []
+    test_data = []
+    validation_data = []
+    rate = [0.6, 0.2, 0.2]
+    data = np.array(data)
+    label = list(data[:, -1])
+    label_dict = {i: label.count(i) for i in set(label)}
+    print(label_dict)
+    used_label = {i: 0 for i in set(label)}
+    np.random.shuffle(data)
+    for i in data:
+        sign = i[-1]
+        if used_label[sign] < 0.6 * label_dict[sign]:
+            train_data.append(i)
+            used_label[sign] += 1
+        elif used_label[sign] < 0.8 * label_dict[sign]:
+            test_data.append(i)
+            used_label[sign] += 1
+        else:
+            validation_data.append(i)
+    if show is True:
+        print('train', len(train_data))
+        print('test', len(test_data))
+        print('validation', len(validation_data))
+    return train_data, test_data, validation_data
 
 
 if __name__ == '__main__':
