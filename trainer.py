@@ -20,24 +20,19 @@ def train(data_tuple: tuple, data_size: int) -> None:
     origin_entropy = compute_ent(list(l))
     print('origin_entropy: ', origin_entropy)
     bt = tree_generate(train_data, test_data, max_usage=2, node_num=7)
-    max({})
     # compute_node(train_data, nodes_num=8)
     pass
 
 
-def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, max_usage: int=2, node_num=7, rng=False):
+def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, max_usage: int=2, node_num=7):
     """
     :param train_data: 训练集
     :param test_data: 测试集
     :param feature_usage: 所有的feature的使用情况
     :param max_usage: 每个feature可以使用的最大次数
     :param node_num: 最大可供选择的节点数，默认为7
-    :param node:
     :return:
     """
-    if rng is True:
-        print('in left')
-
     disabled_features = []
     if not feature_usage:  # 第一次初始化feature使用情况
         feature_usage = defaultdict(lambda: 0)
@@ -71,7 +66,6 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
     break_num = break_info[1]
     feature_usage[chosen_feature] += 1
 
-    # sorted_data = sorted(train_data, key=lambda s: s[chosen_feature])
     train_data_left = []
     train_data_right = []
     for datum in train_data:
@@ -107,12 +101,15 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
     print('mixed_accuracy', mixed_accuracy)
 
     if mixed_accuracy > test_accuracy or len(train_data) > 50 * max_usage:  # 预剪枝
+        feature_usage_left = defaultdict(lambda: 0)
+        for i, j in feature_usage.items():
+            feature_usage_left[i] = j
+        feature_usage_right = defaultdict(lambda: 0)
+        for i, j in feature_usage.items():
+            feature_usage_right[i] = j
         print('剪枝')
-        bt.set_right(tree_generate(train_data_right, test_data_right, feature_usage, max_usage))
-
-        print('right done')
-        bt.set_left(tree_generate(train_data_left, test_data_left, feature_usage, max_usage, rng=True))
-        print('left done')
+        bt.set_right(tree_generate(train_data_right, test_data_right, feature_usage_right, max_usage))
+        bt.set_left(tree_generate(train_data_left, test_data_left, feature_usage_left, max_usage))
         return bt
     else:
         bt.set_leaf()  # 标记为叶节点
@@ -158,19 +155,14 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
         for potential_node in potential_nodes:  # 对于一个feature上每一个可能产生节点的点计算熵
             list_a = list(i[-1] for i in data_set if i[feature_id] < potential_node)
             list_b = list(i[-1] for i in data_set if i[feature_id] >= potential_node)
-            # list_a = list(sorted_data[:potential_node_index, -1])  # 分支a，所有值为类别
-            # list_b = list(sorted_data[potential_node_index:, -1])  # 分支b
             ent = len(list_a) / m * compute_ent(list_a) + len(list_b) / m * compute_ent(list_b)
-            # print('ent', sorted_data[potential_node_index, feature_id], ent)
             if ent < chose_node[1] or chose_node[1] == -1:
                 chose_node = (potential_node, ent)
         chose_node = (feature_id, chose_node[0], chose_node[1])
-        print('chose_node', chose_node)
+        # print('chose_node', chose_node)
         if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
             chosen_node = chose_node
     print('chosen_node', chosen_node)
-    if chosen_node == (-1, -1, -1):
-        max({})
     return chosen_node
 
 
@@ -224,13 +216,6 @@ def hold_out(data: list, show=False) -> tuple:
 
 
 if __name__ == '__main__':
-    # train(1)
-    # a = {
-    #     0: [[0, 1, 5], [8, 2, 5], [10, 3, 5], [9, 8, 5], [1, 8, 5]],
-    #     1: [[2, 6, 5], [9, 10, 5], [351, 20, 5], [2, 15, 5]],
-    #     3: [[3, 2, 5], [8, 9, 5], [8, 105, 5]]
-    # }
-    # compute_node(a)
     a = [[1], [1], [1], [2], [2]]
     print(compute_accuracy(a))
     pass

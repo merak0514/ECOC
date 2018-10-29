@@ -60,9 +60,6 @@ class ECOC(object):
         # 开始训练
         for cl in self.re_classified_data:
             data_tuple = trainer.hold_out(cl)
-
-            # for i in cl.values():
-            #     print(len(i))
             trainer.train(data_tuple, self.data_size)
             break
 
