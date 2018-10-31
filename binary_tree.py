@@ -10,7 +10,7 @@ T = TypeVar('BinaryTree')
 
 class BinaryTree(Generic[T]):
     def __init__(self, root_obj):
-        self.key = root_obj
+        self.node_info = root_obj
         self.left_child = None
         self.right_child = None
         self.is_leaf = False  # 若是是叶节点，则变为True; 叶节点没有分支
@@ -40,22 +40,25 @@ class BinaryTree(Generic[T]):
         return self.right_child
 
     def get_key(self):
-        return self.key
+        return self.node_info
 
     def set_key(self, root_obj):
-        self.key = root_obj
-
-    def get_right_child(self):
-        return self.right_child
-
-    def get_left_child(self):
-        return self.left_child
+        self.node_info = root_obj
 
     def set_leaf(self, is_leaf=True):
         self.is_leaf = is_leaf
 
+    def compute_accuracy(self, accuracy_type: str='train_accuracy'):
+        return self.accuracy_computer(accuracy_type) / len(self.node_info['train_data'])
+
+    def accuracy_computer(self, accuracy_type: str):
+        if self.is_leaf is True:
+            return self.node_info[accuracy_type]
+        else:
+            return self.left_child.accuracy_computer + self.right_child.accuracy_computer
+
     def show_right_tree(self):
-        print(self.key)
+        print(self.node_info)
         if self.right_child is not None:
             print('|')
             self.right_child.show_right_tree()
