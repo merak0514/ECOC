@@ -4,6 +4,8 @@
 # @Author   : Merak
 # @File     : entropy.py
 # @Software : PyCharm
+
+# 弃用
 import math
 
 

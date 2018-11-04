@@ -8,6 +8,7 @@ import data_import
 import plot
 import classifier
 import trainer
+import operation as op
 import pymongo
 import pymongo.errors
 
@@ -59,7 +60,7 @@ class ECOC(object):
 
         # 开始训练
         for cl in self.re_classified_data:
-            data_tuple = trainer.hold_out(cl)
+            data_tuple = op.hold_out(cl)
             trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
             break
 
