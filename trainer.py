@@ -19,9 +19,12 @@ def train(data_tuple: tuple, data_size: int) -> None:
     l = np.array(train_data)[:, -1]
     origin_entropy = compute_ent(list(l))
     print('origin_entropy: ', origin_entropy)
-    bt = tree_generate(train_data, test_data, max_usage=2, node_num=7)
+    bt = tree_generate(train_data, test_data, max_usage=3, node_num=7)
+    print('accuracy', bt.compute_accuracy())
+    b_tree = bt.regenerate_tree()
+    # raise Exception  # 强行报错，使用pycharm自带的debug看内存
     # compute_node(train_data, nodes_num=8)
-    pass
+    return b_tree
 
 
 def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, max_usage: int=2, node_num=7):
@@ -31,7 +34,7 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
     :param feature_usage: 所有的feature的使用情况
     :param max_usage: 每个feature可以使用的最大次数
     :param node_num: 最大可供选择的节点数，默认为7
-    :return:
+    :return: bt 返回一棵树
     """
     disabled_features = []
     if not feature_usage:  # 第一次初始化feature使用情况
@@ -47,7 +50,7 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
     print('length', len(train_data))
     chosen_class, accuracy = compute_accuracy(train_data)
     node_info = {
-        'train_data': train_data,
+        'train_data_len': len(train_data),
         'class': chosen_class,
         'train_accuracy': accuracy,
         'test_accuracy': test_accuracy,
@@ -56,11 +59,12 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
 
     if len(train_data) <= node_num or accuracy == 1 or test_accuracy == 1:  # 数据量小于要产生可能分叉点的量，返回
         bt.set_leaf()  # 标记为叶节点
-        bt.set_right(0)
+        # bt.set_right(0)
         print('无法继续分支，标记为叶节点')
         return bt
 
     break_info = compute_node(train_data, disabled_features, nodes_num=7)
+    bt.node_info['break_info'] = break_info
 
     chosen_feature = break_info[0]
     break_num = break_info[1]
@@ -82,25 +86,28 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
         else:
             test_data_right.append(datum)
 
-    print(len(test_data_left))
     if not test_data_left or not test_data_right:
+        # 测试集用完标记为叶节点
         bt.set_leaf()  # 标记为叶节点
-        bt.set_right(1)
+        # bt.set_right(1)
         print('测试集为空，标记为叶节点')
         return bt
 
+    # 计算标记的类，在下方测试集上强行标记
     train_left_chosen_class, train_left_accuracy = compute_accuracy(train_data_left)
     train_right_chosen_class, train_right_accuracy = compute_accuracy(train_data_right)
 
     test_left_chosen_class, test_left_accuracy = compute_accuracy(test_data_left, max_class=train_left_chosen_class)
     test_right_chosen_class, test_right_accuracy = compute_accuracy(test_data_right, max_class=train_right_chosen_class)
-    
+
+    # 加权计算得到的测试集上的综合准确率
     mixed_accuracy = (len(test_data_left) * test_left_accuracy + len(test_data_right) * test_right_accuracy) / \
                      (len(test_data_right) + len(test_data_left))
 
     print('mixed_accuracy', mixed_accuracy)
 
-    if mixed_accuracy > test_accuracy or len(train_data) > 50 * max_usage:  # 预剪枝
+    if (mixed_accuracy > test_accuracy) or (len(train_data) > 100)\
+            or (mixed_accuracy >= test_accuracy and len(train_data_right) > 30):  # 预剪枝
         feature_usage_left = defaultdict(lambda: 0)
         for i, j in feature_usage.items():
             feature_usage_left[i] = j
@@ -113,7 +120,7 @@ def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, m
         return bt
     else:
         bt.set_leaf()  # 标记为叶节点
-        bt.set_right(2)
+        # bt.set_right(2)
         print('不能减少准确度，标记为叶节点')
         return bt
 
@@ -169,8 +176,8 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
 def compute_accuracy(data: list, max_class=None)->tuple:
     """
     返回所标记的类别和精确率
+    :param: max_class: 可以强行指定此处标记的类别
     """
-    # data = np.array(data)
     label = [i[-1] for i in data]
     # print([str(i) for i in set(label)])
     label_dict = {i: label.count(i) for i in set(label)}
@@ -200,10 +207,10 @@ def hold_out(data: list, show=False) -> tuple:
     np.random.shuffle(data)
     for i in data:
         sign = i[-1]
-        if used_label[sign] < 0.6 * label_dict[sign]:
+        if used_label[sign] < rate[0] * label_dict[sign]:
             train_data.append(i)
             used_label[sign] += 1
-        elif used_label[sign] < 0.8 * label_dict[sign]:
+        elif used_label[sign] < (rate[0] + rate[1]) * label_dict[sign]:
             test_data.append(i)
             used_label[sign] += 1
         else:

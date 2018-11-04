@@ -21,43 +21,50 @@ class BinaryTree(Generic[T]):
     def set_right(self, obj):
         self.right_child = obj
 
-    def insert_left(self, new_node):
-        if self.left_child is None:
-            self.left_child = BinaryTree(new_node)
-        else:
-            temp = BinaryTree(new_node)
-            temp.left_child = self.left_child
-            self.left_child = temp.left_child
-        return self.left_child
-
-    def insert_right(self, new_code: T):
-        if self.left_child is None:
-            self.right_child = BinaryTree(new_code)
-        else:
-            temp = BinaryTree(new_code)
-            temp.right_child = self.right_child
-            self.right_child = temp.right_child
-        return self.right_child
-
-    def get_key(self):
+    def get_node_info(self):
         return self.node_info
 
-    def set_key(self, root_obj):
+    def set_node_info(self, root_obj):
         self.node_info = root_obj
 
     def set_leaf(self, is_leaf=True):
         self.is_leaf = is_leaf
 
     def compute_accuracy(self, accuracy_type: str='train_accuracy'):
-        return self.accuracy_computer(accuracy_type) / len(self.node_info['train_data'])
+        """
+        计算训练集的精确度
+        :param accuracy_type: node_info中的精确度的index
+        :type accuracy_type:
+        """
+        return self.accuracy_computer(accuracy_type) / self.node_info['train_data_len']
 
     def accuracy_computer(self, accuracy_type: str):
+        """
+        别用这个，这是递归用的
+        """
         if self.is_leaf is True:
-            return self.node_info[accuracy_type]
+            return self.node_info[accuracy_type] * self.node_info['train_data_len']
         else:
-            return self.left_child.accuracy_computer + self.right_child.accuracy_computer
+            return self.left_child.accuracy_computer(accuracy_type) + self.right_child.accuracy_computer(accuracy_type)
+
+    def regenerate_tree(self):
+        """
+        原始训练得到的树进行简化，删除不需要的部分，只保留分割点的信息
+        :return:
+        :rtype:
+        """
+        if self.is_leaf is False:
+            bt = BinaryTree(self.get_node_info()['break_info'])
+            bt.set_left(self.left_child.regenerate_tree())
+            bt.set_right(self.right_child.regenerate_tree())
+        else:
+            bt = BinaryTree(None)
+        return bt
 
     def show_right_tree(self):
+        """
+        测试用
+        """
         print(self.node_info)
         if self.right_child is not None:
             print('|')
@@ -65,11 +72,12 @@ class BinaryTree(Generic[T]):
 
 
 if __name__ == '__main__':
-    a = [1, 5, 6, 8, 0]
-
-    bt = BinaryTree(-1)
-    origin_bt = bt
-    for i in a:
-        bt = bt.insert_right(i)
-    origin_bt.show_right_tree()
-    bt.insert_left(bt)
+    # a = [1, 5, 6, 8, 0]
+    #
+    # bt = BinaryTree(-1)
+    # origin_bt = bt
+    # for i in a:
+    #     bt = bt.insert_right(i)
+    # origin_bt.show_right_tree()
+    # bt.insert_left(bt)
+    pass
