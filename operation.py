@@ -7,6 +7,7 @@
 
 # 各种数学操作
 import math
+import numpy as np
 
 
 def entropy(l: list) -> float:

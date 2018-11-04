@@ -10,7 +10,13 @@ import binary_tree
 import operation as op
 
 
-def train(data_tuple: tuple, data_size: int) -> None:
+def train(data_tuple: tuple, data_size: int):
+    """
+    训练
+    :param data_tuple: (train, test, validation)
+    :param data_size:
+    :return: b_tree:
+    """
     train_data = data_tuple[0]
     test_data = data_tuple[1]
     validation_data = data_tuple[2]
@@ -18,10 +24,18 @@ def train(data_tuple: tuple, data_size: int) -> None:
     # print(train_data)
     l = np.array(train_data)[:, -1]
     origin_entropy = op.compute_ent(list(l))
-    print('origin_entropy: ', origin_entropy)
+    # print('origin_entropy: ', origin_entropy)
+
     bt = tree_generate(train_data, test_data, max_usage=3, node_num=7)
-    print('accuracy', bt.compute_accuracy(key='train_accuracy'))
+
+    print('train accuracy', bt.compute_accuracy(key='train_accuracy'))
     b_tree = bt.regenerate_tree()
+    b_tree.apply_data(test_data)
+    print('test_data accuracy', b_tree.compute_accuracy())
+    b_tree = bt.regenerate_tree()
+    b_tree.apply_data(validation_data)
+    print('validation_data accuracy', b_tree.compute_accuracy())
+
     # raise Exception  # 强行报错，使用pycharm自带的debug看内存
     # compute_node(train_data, nodes_num=8)
     return b_tree

@@ -4,11 +4,10 @@
 # @Author   : Merak
 # @File     : binary_tree.py
 # @Software : PyCharm
-from typing import TypeVar, Generic
-T = TypeVar('BinaryTree')
+import operation as op
 
 
-class BinaryTree(Generic[T]):
+class BinaryTree(object):
     def __init__(self, root_obj):
         self.node_info = root_obj
         self.left_child = None
@@ -30,22 +29,21 @@ class BinaryTree(Generic[T]):
     def set_leaf(self, is_leaf=True):
         self.is_leaf = is_leaf
 
-    def compute_accuracy(self, accuracy_type: str='train_accuracy'):
+    def compute_accuracy(self, key: str='accuracy'):
         """
         计算训练集的精确度
-        :param accuracy_type: node_info中的精确度的index
-        :type accuracy_type:
+        :param key: node_info中的精确度的index
         """
-        return self.accuracy_computer(accuracy_type) / self.node_info['train_data_len']
+        return self.accuracy_computer(key) / self.node_info['data_len']
 
-    def accuracy_computer(self, accuracy_type: str):
+    def accuracy_computer(self, key: str):
         """
         别用这个，这是递归用的
         """
         if self.is_leaf is True:
-            return self.node_info[accuracy_type] * self.node_info['train_data_len']
+            return self.node_info[key] * self.node_info['data_len']
         else:
-            return self.left_child.accuracy_computer(accuracy_type) + self.right_child.accuracy_computer(accuracy_type)
+            return self.left_child.accuracy_computer(key) + self.right_child.accuracy_computer(key)
 
     def regenerate_tree(self):
         """
@@ -54,12 +52,40 @@ class BinaryTree(Generic[T]):
         :rtype:
         """
         if self.is_leaf is False:
-            bt = BinaryTree(self.get_node_info()['break_info'])
+            bt = BinaryTree({
+                'break_info': self.node_info['break_info'][0: 2],
+                'class': self.node_info['class']
+            })
             bt.set_left(self.left_child.regenerate_tree())
             bt.set_right(self.right_child.regenerate_tree())
         else:
-            bt = BinaryTree(None)
+            bt = BinaryTree({
+                'class': self.node_info['class']
+            })
+            bt.set_leaf()
         return bt
+
+    def apply_data(self, data_list):
+        self.node_info['data_len'] = len(data_list)
+        if self.is_leaf is False:
+            # 非叶节点向下递归
+            break_info = self.node_info['break_info']
+            feature = break_info[0]
+            value = break_info[1]
+            left = []
+            right = []
+            for datum in data_list:
+                # 分类
+                if datum[feature] < value:
+                    left.append(datum)
+                else:
+                    right.append(datum)
+            self.left_child.apply_data(left)
+            self.right_child.apply_data(right)
+        else:
+            # 叶节点计算accuracy
+            accuracy = op.compute_accuracy(data_list, max_class=self.node_info['class'])[1]
+            self.node_info['accuracy'] = accuracy
 
     def show_right_tree(self):
         """
