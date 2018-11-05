@@ -87,14 +87,35 @@ class BinaryTree(object):
             accuracy = op.compute_accuracy(data_list, max_class=self.node_info['class'])[1]
             self.node_info['accuracy'] = accuracy
 
+    def decide(self, datum: list):
+        """
+        确定输入的一条数据所属的类。
+        :param datum:
+        :return:
+        """
+        current_tree = self
+        while current_tree.is_leaf is False:
+            break_info = self.node_info['break_info']
+            feature = break_info[0]
+            value = break_info[1]
+            if datum[feature] < value:
+                current_tree = current_tree.left_child
+            else:
+                current_tree = current_tree.right_child
+        return current_tree.node_info['class']
+
     def show_right_tree(self):
         """
         测试用
+        需要先运行apply_data
         """
         print(self.node_info)
         if self.right_child is not None:
             print('|')
             self.right_child.show_right_tree()
+
+
+
 
 
 if __name__ == '__main__':
