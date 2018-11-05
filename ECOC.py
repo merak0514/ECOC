@@ -11,6 +11,7 @@ import trainer
 import operation as op
 import pymongo
 import pymongo.errors
+import mongo
 
 
 class ECOC(object):
@@ -21,16 +22,20 @@ class ECOC(object):
     sample_dict: dict
 
     def __init__(self):
-        fixed_data = data_import.get_data(show=False)
+        fixed_data = data_import.get_data(show=True)
         self.sample_dict = fixed_data[2]  # 以类名为key的dict
         self.origin_data = fixed_data[3]  # 原始数据，为二维list
         self.data_size = len(self.origin_data)  # 数据量
         self.feature_names = fixed_data[0]  # 所有的feature名字集合
         self.class_names = fixed_data[1]  # 所有的类名集合
+        self.train_data = fixed_data[4]  # 训练集
+        self.validation_data = fixed_data[5]  # 验证集
         self.re_classified_data = []  # 所有的分类方案
         self.choice_matrix = []  # 选择矩阵
+        self.client_name = 'mongodb://localhost:27017/'
         self.client = pymongo.MongoClient('mongodb://localhost:27017/')
         self.db_name = 'ECOC'
+        self.tree_set = []
 
     def train_all(self, k: int):
         """
@@ -61,56 +66,22 @@ class ECOC(object):
         # 开始训练
         for cl in self.re_classified_data:
             data_tuple = op.hold_out(cl)
-            trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
+            bt = trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
+            self.tree_set.append(bt)
             break
 
     def plot(self, label1, label2):
         plot.plot(self.origin_data, label1, label2)
 
     def mongo(self):
-        """
-        上传到mongo数据库
-        """
-        form_name = 'winequality-white'
-        db = self.client[self.db_name]
-        if form_name not in db.collection_names():
-            form1 = db[form_name]
-            for data_id in range(len(self.origin_data)):
-                feature = self.feature_names
-                feature.append('rank')
-                temp_dict = dict(zip(feature, self.origin_data[data_id]))
-                temp_dict['_id'] = data_id
-                try:
-                    form1.insert_one(temp_dict)
-                except pymongo.errors.DuplicateKeyError:
-                    pass
-                else:
-                    print('Upload failed')
-                    return 1
-            print('Uploaded to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
-        else:
-            print('Form {} already exists'.format(form_name))
-
-        form_name = 'choice_matrix'
-        if form_name not in db.collection_names():
-            form = db[form_name]
-            for choice_id in range(len(self.choice_matrix)):
-                choice = self.choice_matrix[choice_id]
-                temp_dict = {
-                    '_id': choice_id,
-                    'choice': ','.join([str(i) for i in choice])
-                }
-                try:
-                    form.insert_one(temp_dict)
-                except pymongo.errors.DuplicateKeyError:
-                    pass
-            print('Uploaded to mongo [Database {}, Form {}] successfully'.format(self.db_name, form_name))
-        else:
-            print('Form {} already exists'.format(form_name))
+        m = mongo.Mongo(self.client_name, self.db_name)
+        m.upload_train_data(self.origin_data, self.feature_names, 'winequality-white_origin')
+        m.upload_train_data(self.train_data, self.feature_names, 'winequality-white_train')
+        m.upload_train_data(self.validation_data, self.feature_names, 'winequality-white_validation')
+        m.upload_choice_matrix(self.choice_matrix)
 
 
 if __name__ == '__main__':
 
     e = ECOC()
     e.train_all(12)
-    # e.mongo()
