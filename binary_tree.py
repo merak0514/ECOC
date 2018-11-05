@@ -29,7 +29,7 @@ class BinaryTree(object):
     def set_leaf(self, is_leaf=True):
         self.is_leaf = is_leaf
 
-    def compute_accuracy(self, key: str='accuracy'):
+    def compute_accuracy(self, key: str='accuracy') -> float:
         """
         计算训练集的精确度
         :param key: node_info中的精确度的index
@@ -48,7 +48,7 @@ class BinaryTree(object):
     def regenerate_tree(self):
         """
         原始训练得到的树进行简化，删除不需要的部分，只保留分割点的信息
-        :return:
+        :return:树
         :rtype:
         """
         if self.is_leaf is False:
@@ -87,7 +87,7 @@ class BinaryTree(object):
             accuracy = op.compute_accuracy(data_list, max_class=self.node_info['class'])[1]
             self.node_info['accuracy'] = accuracy
 
-    def decide(self, datum: list):
+    def decide(self, datum: list) -> float:
         """
         确定输入的一条数据所属的类。
         :param datum:
@@ -95,7 +95,7 @@ class BinaryTree(object):
         """
         current_tree = self
         while current_tree.is_leaf is False:
-            break_info = self.node_info['break_info']
+            break_info = current_tree.node_info['break_info']
             feature = break_info[0]
             value = break_info[1]
             if datum[feature] < value:
@@ -103,19 +103,6 @@ class BinaryTree(object):
             else:
                 current_tree = current_tree.right_child
         return current_tree.node_info['class']
-
-    def show_right_tree(self):
-        """
-        测试用
-        需要先运行apply_data
-        """
-        print(self.node_info)
-        if self.right_child is not None:
-            print('|')
-            self.right_child.show_right_tree()
-
-
-
 
 
 if __name__ == '__main__':
