@@ -8,6 +8,7 @@
 # 各种数学操作
 import math
 import numpy as np
+import binary_tree
 
 
 def entropy(l: list) -> float:
@@ -108,3 +109,37 @@ def hold_validation_data(data: list, show=False) -> tuple:
         print('train', len(train_data))
         print('validation', len(validation_data))
     return train_data, validation_data
+
+
+def validate(tree_set: list, validation_data, choice_matrix, classes_names):
+    tree: binary_tree.BinaryTree
+    choice_matrix = np.array(choice_matrix)
+
+    correct = []
+    for datum in validation_data:
+        distances = []
+        datum_choice = []  # 计算出的选择，需要计算与选择矩阵每一列的距离，找出距离最小的
+
+        for tree in tree_set:
+            datum_choice.append(tree.decide(datum))
+
+        for i in range(np.size(choice_matrix, 1)):
+            choice = choice_matrix[:, i]
+            distance = np.sum(np.square(choice - datum_choice))
+            distances.append(distance)
+
+        # print(datum_choice)
+
+        chosen_class = round(classes_names[distances.index(min(distances))])
+
+        if chosen_class == datum[-1]:
+            correct.append(1)
+        else:
+            correct.append(0)
+        # print('datum', datum)
+        # print('chosen_class', chosen_class)
+
+    print(sum(correct))
+    print(len(correct))
+    accuracy = sum(correct) / len(correct)
+    print(accuracy)
