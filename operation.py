@@ -65,7 +65,9 @@ def hold_out(data: list, show=False) -> tuple:
     label = list(data[:, -1])
     label_dict = {i: label.count(i) for i in set(label)}
     used_label = {i: 0 for i in set(label)}
+
     np.random.shuffle(data)
+
     for i in data:
         sign = i[-1]
         if used_label[sign] < rate[0] * label_dict[sign]:
@@ -97,7 +99,9 @@ def hold_validation_data(data: list, show=False) -> tuple:
     label = list(data[:, -1])
     label_dict = {i: label.count(i) for i in set(label)}
     used_label = {i: 0 for i in set(label)}
+
     np.random.shuffle(data)
+
     for i in data:
         sign = i[-1]
         if used_label[sign] < rate[0] * label_dict[sign]:
@@ -116,30 +120,58 @@ def validate(tree_set: list, validation_data, choice_matrix, classes_names):
     choice_matrix = np.array(choice_matrix)
 
     correct = []
+    correct2 = []
+    average_bias = 0
     for datum in validation_data:
         distances = []
+        distances2 = []
         datum_choice = []  # 计算出的选择，需要计算与选择矩阵每一列的距离，找出距离最小的
+        datum_choice2 = []  # 计算出的选择，带有权重
 
-        for tree in tree_set:
+        for tree, weight in tree_set:
             datum_choice.append(tree.decide(datum))
+            if weight < 0.6:  # 原始树的正确率过低则直接设置为不判定
+                datum_choice2.append(0)
+            else:
+                datum_choice2.append(tree.decide(datum))
 
         for i in range(np.size(choice_matrix, 1)):
             choice = choice_matrix[:, i]
-            distance = np.sum(np.square(choice - datum_choice))
-            distances.append(distance)
 
-        # print(datum_choice)
+            distance = np.sum(np.abs(choice - datum_choice))
+            distance2 = np.sum(np.abs(choice - datum_choice2))
+
+            distances.append(distance)
+            distances2.append(distance2)
 
         chosen_class = round(classes_names[distances.index(min(distances))])
+        chosen_class2 = round(classes_names[distances2.index(min(distances2))])
+
+        # print(datum_choice)
+        # print(distances)
+        # print(datum)
+        # print(chosen_class)
+        # input(1)
 
         if chosen_class == datum[-1]:
             correct.append(1)
         else:
             correct.append(0)
+            average_bias += abs(chosen_class - datum[-1])
+
+        if chosen_class2 == datum[-1]:
+            correct2.append(1)
+        else:
+            correct2.append(0)
         # print('datum', datum)
         # print('chosen_class', chosen_class)
+
+    average_bias = average_bias / len(correct)
 
     print(sum(correct))
     print(len(correct))
     accuracy = sum(correct) / len(correct)
-    print(accuracy)
+    accuracy2 = sum(correct2) / len(correct2)
+    print('accuracy', accuracy)
+    print('accuracy2', accuracy2)
+    print('average_bias', average_bias)
