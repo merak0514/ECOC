@@ -22,14 +22,14 @@ class ECOC(object):
     sample_dict: dict
 
     def __init__(self):
-        fixed_data = data_import.get_data(show=True)
+        fixed_data = data_import.get_data(show=False)
         self.sample_dict = fixed_data[2]  # 以类名为key的dict
         self.origin_data = fixed_data[3]  # 原始数据，为二维list
-        self.data_size = len(self.origin_data)  # 数据量
         self.feature_names = fixed_data[0]  # 所有的feature名字集合
         self.class_names = fixed_data[1]  # 所有的类名集合
         self.train_data = fixed_data[4]  # 训练集
         self.validation_data = fixed_data[5]  # 验证集
+        self.data_size = len(self.train_data)  # 数据量
         self.re_classified_data = []  # 所有的分类方案
         self.choice_matrix = []  # 选择矩阵
         self.client_name = 'mongodb://localhost:27017/'
@@ -63,15 +63,18 @@ class ECOC(object):
         print(self.choice_matrix)
         self.mongo()
 
+        print(self.class_names)
         # 开始训练
         for cl in self.re_classified_data:
             data_tuple = op.hold_out(cl)
             bt = trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
             self.tree_set.append(bt)
-            break
+            # break
+
+        self.validate()
 
     def plot(self, label1, label2):
-        plot.plot(self.origin_data, label1, label2)
+        plot.plot(self.train_data, label1, label2)
 
     def mongo(self):
         m = mongo.Mongo(self.client_name, self.db_name)
@@ -80,8 +83,11 @@ class ECOC(object):
         m.upload_train_data(self.validation_data, self.feature_names, 'winequality-white_validation')
         m.upload_choice_matrix(self.choice_matrix)
 
+    def validate(self):
+        op.validate(self.tree_set, self.validation_data, self.choice_matrix, self.class_names)
+
 
 if __name__ == '__main__':
 
     e = ECOC()
-    e.train_all(12)
+    e.train_all(8)
