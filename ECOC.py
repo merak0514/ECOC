@@ -67,8 +67,8 @@ class ECOC(object):
         # 开始训练
         for cl in self.re_classified_data:
             data_tuple = op.hold_out(cl)
-            bt = trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
-            self.tree_set.append(bt)
+            bt, accuracy = trainer.train(data_tuple, self.data_size)  # 得到一棵b_tree
+            self.tree_set.append((bt, accuracy))
             # break
 
         self.validate()
@@ -90,4 +90,4 @@ class ECOC(object):
 if __name__ == '__main__':
 
     e = ECOC()
-    e.train_all(8)
+    e.train_all(10)

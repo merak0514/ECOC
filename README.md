@@ -14,6 +14,9 @@
 导入数据集，进行基本处理
 
 `data_import.get_data(show=false)` 如果show的值为true，则会print部分数据。
+
+此处需要预留出validation set
+
 ### 2. 绘图观察
 
     plot.plot(data, label1=0, label2=1)
@@ -32,7 +35,6 @@
     
 * 按照选择矩阵把原始类归到新类中，索引分别为0/1
 
-
     classifier.classifier(data, label, k)
     
 返回: 分类后的新数据（包含k个dict的list，每个dict的key为0/1），和选择矩阵（作为之前分类的依据）。<br>
@@ -44,6 +46,10 @@
 
 #### 将数据集划分为3块
 
+* train_set: 训练中计算熵（划分依据）
+* test_set: 训练中计算精确度（预剪枝）
+* validation_set: 计算该树的权重
+
 #### 选择最优划分属性
 此样本中所有feature均为连续量。均匀选取1/10样本作为可能划分点，所有feature在使用【两次】之后被禁止使用。
 * 左开右闭
@@ -54,4 +60,6 @@
     * `compute_node(info: dict, disabled_feature: list=[], nodes_num: int=2)->tuple`
     * `info` 为dict，key为所分的类（后来分的类）；`disabled_feature` 为 list，代表不激活的 feature；`nodes_num` 为可能可以供选择的节点数量。
     * 返回节点信息 `tuple(采用的feature，节点位置，熵)`
+* 预剪枝
+    * 每一枝数据集足够小（减小欠拟合风险），且在测试集
 ### 5. 对于每一个新类，进行训练分类

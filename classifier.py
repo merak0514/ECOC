@@ -46,11 +46,11 @@ def new_class(data: dict, label: list, c_matrix: list) -> list:
         new_data = []
         for i in range(c):
             la = label[i]
-            b = choice[i]
+            b = choice[i]  # 0/1
             for datum in data[la]:
-                new_data.append(datum + [b])
+                new_data.append(list(datum) + [b])
         re_classified_data.append(new_data)
-    # print(re_classified_data[0])
+    print(re_classified_data[0][0])
     # input(1)
 
     return re_classified_data
@@ -62,6 +62,7 @@ def classifier(data: dict, label: list, k: int, show: bool = False, c_matrix=0) 
     :param label: 类的名字集合
     :param k: 需要重新生成的类数
     :param show:  是否展示
+    :param c_matrix: 是否已经有了选择矩阵了
     :return: re_classified_data: 重新分类后的数据，为长度为k的list，每一项是一个key为0/1的dict, \
     其中0 和1 对应的值都是一个list，该list中的每一项为一条数据
     :return: c_matrix: choice_matrix 选择矩阵
@@ -73,5 +74,5 @@ def classifier(data: dict, label: list, k: int, show: bool = False, c_matrix=0) 
         for i in re_classified_data:
             print(i)
             input('任意键继续')
-    return re_classified_data, c_matrix
+    return re_classified_data, list(c_matrix)
 

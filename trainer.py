@@ -20,25 +20,26 @@ def train(data_tuple: tuple, data_size: int):
     train_data = data_tuple[0]
     test_data = data_tuple[1]
     validation_data = data_tuple[2]
-    print(data_size)
-    # print(train_data)
-    l = np.array(train_data)[:, -1]
-    origin_entropy = op.compute_ent(list(l))
-    # print('origin_entropy: ', origin_entropy)
+    validation_data_accuracy = 0
+    # print(data_size)
 
     bt = tree_generate(train_data, test_data, max_usage=3, node_num=7)
 
-    print('train accuracy', bt.compute_accuracy(key='train_accuracy'))
+    # print('train accuracy', bt.compute_accuracy(key='train_accuracy'))
     b_tree = bt.regenerate_tree()
-    b_tree.apply_data(test_data)
-    print('test_data accuracy', b_tree.compute_accuracy())
-    b_tree = bt.regenerate_tree()
+    #
+    # b_tree.apply_data(test_data)
+    # print('test_data accuracy', b_tree.compute_accuracy())
+    # b_tree = bt.regenerate_tree()
+    #
     b_tree.apply_data(validation_data)
-    print('validation_data accuracy', b_tree.compute_accuracy())
+    validation_data_accuracy = b_tree.compute_accuracy()
+    print('validation_data accuracy', validation_data_accuracy)
+    b_tree = b_tree.regenerate_tree()
 
     # raise Exception  # 强行报错，使用pycharm自带的debug看内存
     # compute_node(train_data, nodes_num=8)
-    return b_tree
+    return b_tree, validation_data_accuracy
 
 
 def tree_generate(train_data: list, test_data: list, feature_usage: dict=None, max_usage: int=2, node_num=7):
@@ -153,7 +154,7 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
     if m <= nodes_num:
         nodes_num = input('invalid nodes_num; Please input again: ')
     data_set = np.array(info)
-    print('ent before chosen: ', op.compute_ent(list(data_set[:, -1])))
+    # print('ent before chosen: ', op.compute_ent(list(data_set[:, -1])))
 
     break_length = m / (nodes_num + 1)  # 每隔这么长取一个点；此处m不知道是否应该使用 m+1 或者 m-1 代
     potential_nodes_index = [round(break_length * (i + 1)) for i in range(nodes_num)]  # 这个feature上所有可能的node_index
@@ -177,7 +178,7 @@ def compute_node(info: list, disabled_features: list=[], nodes_num: int=2)->tupl
         # print('chose_node', chose_node)
         if chose_node[2] < chosen_node[2] or chosen_node[2] == -1:
             chosen_node = chose_node
-    print('chosen_node', chosen_node)
+    # print('chosen_node', chosen_node)
     return chosen_node
 
 
